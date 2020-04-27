@@ -46,7 +46,6 @@ type (
 		Labels            *[]Pair
 		Logo              *string
 		NoAuth            *bool
-		NoAnalytics       *bool
 		Templates         *string
 		TLS               *bool
 		TLSSkipVerify     *bool
@@ -448,7 +447,6 @@ type (
 		Authentication     bool   `json:"Authentication"`
 		EndpointManagement bool   `json:"EndpointManagement"`
 		Snapshot           bool   `json:"Snapshot"`
-		Analytics          bool   `json:"Analytics"`
 		Version            string `json:"Version"`
 	}
 
