@@ -116,6 +116,52 @@ func initJobScheduler() portainer.JobScheduler {
 	return cron.NewJobScheduler()
 }
 
+func loadTelemetrySystemSchedule(jobScheduler portainer.JobScheduler, store *bolt.Store) error {
+	settings, err := store.SettingsService.Settings()
+	if err != nil {
+		return err
+	}
+
+	if !settings.Telemetry {
+		return nil
+	}
+
+	schedules, err := store.ScheduleService.SchedulesByJobType(portainer.TelemetryJobType)
+	if err != nil {
+		return err
+	}
+
+	var telemetrySchedule *portainer.Schedule
+	if len(schedules) == 0 {
+		telemetryJob := &portainer.TelemetryJob{}
+		telemetrySchedule = &portainer.Schedule{
+			ID:             portainer.ScheduleID(store.ScheduleService.GetNextIdentifier()),
+			Name:           "system_telemetry",
+			CronExpression: "@daily",
+			Recurring:      true,
+			JobType:        portainer.TelemetryJobType,
+			TelemetryJob:   telemetryJob,
+			Created:        time.Now().Unix(),
+		}
+	} else {
+		telemetrySchedule = &schedules[0]
+	}
+
+	telemetryJobContext := cron.NewTelemetryJobContext(store)
+	telemetryJobRunner := cron.NewTelemetryJobRunner(telemetrySchedule, telemetryJobContext)
+
+	err = jobScheduler.ScheduleJob(telemetryJobRunner)
+	if err != nil {
+		return err
+	}
+
+	if len(schedules) == 0 {
+		return store.ScheduleService.CreateSchedule(telemetrySchedule)
+	}
+
+	return nil
+}
+
 func loadSnapshotSystemSchedule(jobScheduler portainer.JobScheduler, snapshotter portainer.Snapshotter, scheduleService portainer.ScheduleService, endpointService portainer.EndpointService, settingsService portainer.SettingsService) error {
 	settings, err := settingsService.Settings()
 	if err != nil {
@@ -487,6 +533,11 @@ func main() {
 	}
 
 	err = loadEndpointSyncSystemSchedule(jobScheduler, store.ScheduleService, store.EndpointService, flags)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = loadTelemetrySystemSchedule(jobScheduler, store)
 	if err != nil {
 		log.Fatal(err)
 	}

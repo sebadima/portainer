@@ -358,6 +358,7 @@ type (
 		ScriptExecutionJob *ScriptExecutionJob
 		SnapshotJob        *SnapshotJob
 		EndpointSyncJob    *EndpointSyncJob
+		TelemetryJob       *TelemetryJob
 	}
 
 	// ScheduleID represents a schedule identifier.
@@ -408,6 +409,7 @@ type (
 		ImageCount              int         `json:"ImageCount"`
 		ServiceCount            int         `json:"ServiceCount"`
 		StackCount              int         `json:"StackCount"`
+		NodeCount               int         `json:"NodeCount"`
 		SnapshotRaw             SnapshotRaw `json:"SnapshotRaw"`
 	}
 
@@ -493,6 +495,9 @@ type (
 	Telemetry struct {
 		TelemetryID string `json:"TelemetryID"`
 	}
+
+	// TelemetryJob represents a scheduled job that send telemetry data to the telemetry server
+	TelemetryJob struct{}
 
 	// Template represents an application template
 	Template struct {
@@ -1019,6 +1024,8 @@ const (
 	// EndpointSyncJobType is a system job used to synchronize endpoints from
 	// an external definition store
 	EndpointSyncJobType
+	// TelemetryJobType is a system job used to send telemetry data
+	TelemetryJobType
 )
 
 const (
