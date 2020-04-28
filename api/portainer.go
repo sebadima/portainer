@@ -88,7 +88,7 @@ type (
 		ID             ScheduleID   `json:"Id"`
 		CronExpression string       `json:"CronExpression"`
 		Script         string       `json:"Script"`
-		Version        int          `json:"Version"`
+		Version        int          `json:"PortainerVersion"`
 		Endpoints      []EndpointID `json:"Endpoints"`
 	}
 
@@ -188,7 +188,7 @@ type (
 		Deal             bool               `json:"Deal,omitempty"`
 		Available        bool               `json:"Available,omitempty"`
 		License          LicenseInformation `json:"License,omitempty"`
-		Version          string             `json:"Version"`
+		Version          string             `json:"PortainerVersion"`
 		UpdateAvailable  bool               `json:"UpdateAvailable"`
 		ShopURL          string             `json:"ShopURL,omitempty"`
 		Images           []string           `json:"Images,omitempty"`
@@ -423,7 +423,7 @@ type (
 		Networks   interface{} `json:"Networks"`
 		Images     interface{} `json:"Images"`
 		Info       interface{} `json:"Info"`
-		Version    interface{} `json:"Version"`
+		Version    interface{} `json:"PortainerVersion"`
 	}
 
 	// Stack represents a Docker stack created via docker stack deploy
@@ -450,7 +450,7 @@ type (
 		Authentication     bool   `json:"Authentication"`
 		EndpointManagement bool   `json:"EndpointManagement"`
 		Snapshot           bool   `json:"Snapshot"`
-		Version            string `json:"Version"`
+		Version            string `json:"PortainerVersion"`
 	}
 
 	// Tag represents a tag that can be associated to a resource
