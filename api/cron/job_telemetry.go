@@ -54,6 +54,7 @@ type (
 		Stack           StackTelemetryData           `json:"Stack"`
 		Tag             TagTelemetryData             `json:"Tag"`
 		Team            TeamTelemetryData            `json:"Team"`
+		User            UserTelemetryData            `json:"User"`
 	}
 
 	DockerHubTelemetryData struct {
@@ -158,6 +159,12 @@ type (
 		Count           int `json:"Count"`
 		TeamLeaderCount int `json:"TeamLeaderCount"`
 	}
+
+	UserTelemetryData struct {
+		Count             int `json:"Count"`
+		AdminUserCount    int `json:"AdminUserCount"`
+		StandardUserCount int `json:"StandardUserCount"`
+	}
 )
 
 const AuthenticationMethodInternal = "internal"
@@ -241,20 +248,13 @@ func (runner *TelemetryJobRunner) Run() {
 			log.Printf("background schedule error (telemetry). Unable to compute team telemetry (err=%s)\n", err)
 			return
 		}
+
+		err = computeUserTelemetry(telemetryData, runner.context.dataStore)
+		if err != nil {
+			log.Printf("background schedule error (telemetry). Unable to compute user telemetry (err=%s)\n", err)
+			return
+		}
 	}()
-}
-
-func computeTagTelemetry(telemetryData *TelemetryData, store *bolt.Store) error {
-	tags, err := store.TagService.Tags()
-	if err != nil {
-		return err
-	}
-
-	telemetryData.Tag = TagTelemetryData{
-		Count: len(tags),
-	}
-
-	return nil
 }
 
 func initTelemetryData(store *bolt.Store) (*TelemetryData, error) {
@@ -529,6 +529,19 @@ func computeStackTelemetry(telemetryData *TelemetryData, store *bolt.Store) erro
 	return nil
 }
 
+func computeTagTelemetry(telemetryData *TelemetryData, store *bolt.Store) error {
+	tags, err := store.TagService.Tags()
+	if err != nil {
+		return err
+	}
+
+	telemetryData.Tag = TagTelemetryData{
+		Count: len(tags),
+	}
+
+	return nil
+}
+
 func computeTeamTelemetry(telemetryData *TelemetryData, store *bolt.Store) error {
 	teams, err := store.TeamService.Teams()
 	if err != nil {
@@ -548,6 +561,29 @@ func computeTeamTelemetry(telemetryData *TelemetryData, store *bolt.Store) error
 	for _, membership := range teamMemberships {
 		if membership.Role == portainer.TeamLeader {
 			telemetryData.Team.TeamLeaderCount++
+		}
+	}
+
+	return nil
+}
+
+func computeUserTelemetry(telemetryData *TelemetryData, store *bolt.Store) error {
+	users, err := store.UserService.Users()
+	if err != nil {
+		return err
+	}
+
+	telemetryData.User = UserTelemetryData{
+		Count:             len(users),
+		AdminUserCount:    0,
+		StandardUserCount: 0,
+	}
+
+	for _, user := range users {
+		if user.Role == portainer.AdministratorRole {
+			telemetryData.User.AdminUserCount++
+		} else {
+			telemetryData.User.StandardUserCount++
 		}
 	}
 
