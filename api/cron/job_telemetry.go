@@ -52,6 +52,7 @@ type (
 		Runtime         RuntimeTelemetryData         `json:"Runtime"`
 		Settings        SettingsTelemetryData        `json:"Settings"`
 		Stack           StackTelemetryData           `json:"Stack"`
+		Tag             TagTelemetryData             `json:"Tag"`
 		Team            TeamTelemetryData            `json:"Team"`
 	}
 
@@ -149,6 +150,10 @@ type (
 		Swarm      int `json:"Swarm"`
 	}
 
+	TagTelemetryData struct {
+		Count int `json:"Count"`
+	}
+
 	TeamTelemetryData struct {
 		Count           int `json:"Count"`
 		TeamLeaderCount int `json:"TeamLeaderCount"`
@@ -225,12 +230,31 @@ func (runner *TelemetryJobRunner) Run() {
 			return
 		}
 
+		err = computeTagTelemetry(telemetryData, runner.context.dataStore)
+		if err != nil {
+			log.Printf("background schedule error (telemetry). Unable to compute tag telemetry (err=%s)\n", err)
+			return
+		}
+
 		err = computeTeamTelemetry(telemetryData, runner.context.dataStore)
 		if err != nil {
 			log.Printf("background schedule error (telemetry). Unable to compute team telemetry (err=%s)\n", err)
 			return
 		}
 	}()
+}
+
+func computeTagTelemetry(telemetryData *TelemetryData, store *bolt.Store) error {
+	tags, err := store.TagService.Tags()
+	if err != nil {
+		return err
+	}
+
+	telemetryData.Tag = TagTelemetryData{
+		Count: len(tags),
+	}
+
+	return nil
 }
 
 func initTelemetryData(store *bolt.Store) (*TelemetryData, error) {
